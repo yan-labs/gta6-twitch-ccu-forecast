@@ -48,6 +48,10 @@ MIN_SD = 0.18
 MAX_SD = 1.60
 # A comparable's log-ratio is clipped to this range before pooling.
 LOG_RATIO_CLIP = 6.0
+# Quantiles must stay above zero (the output spec refuses a 0), but a
+# tiny hour-1 print times a deep lower-tail ratio rounds to 0.00, so
+# every written quantile is floored at one cent of a viewer.
+MIN_Q = 0.01
 
 
 def parse_time(text):
@@ -164,7 +168,7 @@ def forecast_case(case, name):
             logs = hour_log_quantiles(profiles, weights, hour)
         else:
             logs = [z * 0.15 * math.sqrt(hour - 1) for z in Z]
-        rows.append({"hour": hour, "q": [round2(p1 * math.exp(v)) for v in logs]})
+        rows.append({"hour": hour, "q": [max(MIN_Q, round2(p1 * math.exp(v))) for v in logs]})
     return {"hours": rows}
 
 
